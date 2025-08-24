@@ -10,17 +10,7 @@ This repository contains reusable Ansible playbooks, Jinja2 templates, and autom
 📂 Project Structure
 
    ***My-ansible-Project/***
-    ├── NIST/                     # NIST compliance check playbooks
-    ├── backups/                  # Automated backup playbooks
-    ├── inventory_Management/     # Dynamic/static inventories
-    ├── output/PY_WLC/            # Outputs from WLC automation scripts
-    ├── outputs/                  # General outputs from Ansible runs
-    ├── templates/                # Jinja2 templates for configs
-    ├── Compliance_Report.xlsx    # Generated compliance reports
-    ├── NIST.py                   # Python script for NIST checks
-    ├── NIST.yml                  # Ansible playbook for NIST checks
-    ├── NIST_Compliance_Report.xlsx # Final compliance summary
-
+    My-ansible-Project/ ├── NIST/ (NIST compliance check playbooks) ├── backups/ (Automated backup playbooks) ├── inventory_Management/ (Dynamic/static inventories) ├── output/PY_WLC/ (Outputs from WLC automation scripts) ├── outputs/ (General outputs from Ansible runs) ├── templates/ (Jinja2 templates for configs) ├── Compliance_Report.xlsx (Generated compliance reports) ├── NIST.py (Python script for NIST checks) ├── NIST.yml (Ansible playbook for NIST checks) └── NIST_Compliance_Report.xlsx (Final compliance summary)
 ✨ Features
    ✅ Compliance Automation – Run NIST checks and generate reports
    ✅ Backups – Take periodic network configuration backups
