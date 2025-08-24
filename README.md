@@ -9,7 +9,7 @@ This repository contains reusable Ansible playbooks, Jinja2 templates, and autom
  
 📂 Project Structure
 
-   My-ansible-Project/
+   ***My-ansible-Project/***
     ├── NIST/                     # NIST compliance check playbooks
     ├── backups/                  # Automated backup playbooks
     ├── inventory_Management/     # Dynamic/static inventories
@@ -30,13 +30,13 @@ This repository contains reusable Ansible playbooks, Jinja2 templates, and autom
 
    ***The My Ansible Project successfully demonstrates the power and efficiency of automation in network and system management. Through this project, we achieved:***
 
-Centralized Automation: Configurations, compliance checks, and updates are automated across multiple devices and platforms using Ansible playbooks,
+***Centralized Automation:*** Configurations, compliance checks, and updates are automated across multiple devices and platforms using Ansible playbooks,
 reducing manual effort and human error.
-Consistency and Reliability: Standardized playbooks ensure consistent deployment of configurations and compliance policies across all devices,
+***Consistency and Reliability:*** Standardized playbooks ensure consistent deployment of configurations and compliance policies across all devices,
 leading to reliable and predictable outcomes.
-Time and Resource Efficiency: Tasks that previously required hours of manual work can now be executed within minutes,
+***Time and Resource Efficiency:*** Tasks that previously required hours of manual work can now be executed within minutes,
 freeing network administrators to focus on higher-value activities.
-Scalability: The project framework is scalable, allowing new devices or tasks to be integrated seamlessly without disrupting existing automation workflows.
-Audit and Compliance: Automated logging and output generation provide a clear record of executed tasks, which enhances compliance reporting and audit readiness.
-Overall, My Ansible Project not only streamlines operational workflows but also lays the foundation for advanced network and IT automation,
+***Scalability:*** The project framework is scalable, allowing new devices or tasks to be integrated seamlessly without disrupting existing automation workflows.
+***Audit and Compliance:*** Automated logging and output generation provide a clear record of executed tasks, which enhances compliance reporting and audit readiness.
+Overall, ***My Ansible Project*** not only streamlines operational workflows but also lays the foundation for advanced network and IT automation,
 demonstrating the practical benefits of infrastructure as code and modern configuration management tools.
