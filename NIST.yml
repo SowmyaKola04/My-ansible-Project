@@ -1,0 +1,57 @@
+---
+- name: NIST Compliance Check for All Devices
+  hosts: all
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+    - name: Ensure NIST output directory exists
+      ansible.builtin.file:
+        path: ./NIST
+        state: directory
+        mode: '0755'
+
+    - name: Gather running-config
+      ansible.netcommon.cli_command:
+        command: show running-config
+      register: run_cfg
+
+    - name: Check NIST compliance parameters
+      set_fact:
+        compliance_results: |
+          [
+            {
+              "check": "Syslog host configured",
+              "control_id": "NIST AU-2",
+              "evidence": "{{ device_output.stdout[0] | regex_search('logging host.*', multiline=True) | default('Not Found') }}",
+              "status": "{{ 'PASS' if (device_output.stdout[0] is search('logging host')) else 'FAIL' }}"
+            },
+            {
+              "check": "NTP configured and clock sync",
+              "control_id": "NIST AU-8",
+              "evidence": "{{ device_output.stdout[2] | default('NTP not enabled') }}",
+              "status": "{{ 'PASS' if (device_output.stdout[2] is search('synchronized')) else 'FAIL' }}"
+            },
+            {
+              "check": "SSH enabled, Telnet disabled",
+              "control_id": "NIST AC-17",
+              "evidence": "{{ device_output.stdout[0] | regex_search('line vty[\\s\\S]+?transport input.*', multiline=True) | default('No vty config') }}",
+              "status": "{{ 'PASS' if (device_output.stdout[0] is search('transport input ssh') and not (device_output.stdout[0] is search('transport input telnet'))) else 'FAIL' }}"
+            },
+            {
+              "check": "Timestamps on logging",
+              "control_id": "NIST AU-6",
+              "evidence": "{{ device_output.stdout[0] | regex_search('service timestamps.*', multiline=True) | default('Not Configured') }}",
+              "status": "{{ 'PASS' if (device_output.stdout[0] is search('service timestamps')) else 'FAIL' }}"
+            },
+            {
+              "check": "AAA accounting configured",
+              "control_id": "NIST AU-12",
+              "evidence": "{{ device_output.stdout[0] | regex_search('aaa accounting.*', multiline=True) | default('Not Found') }}",
+              "status": "{{ 'PASS' if (device_output.stdout[0] is search('aaa accounting')) else 'FAIL' }}"
+            }
+          ]
+    - name: Save compliance results (per-device JSON)
+      copy:
+        dest: "./NIST/{{ inventory_hostname }}.json"
+        content: "{{ compliance_results | to_nice_json }}"

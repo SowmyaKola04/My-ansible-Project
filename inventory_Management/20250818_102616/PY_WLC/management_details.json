@@ -1,0 +1,16 @@
+{
+    "Admin_Username": "admin",
+    "Device_Type": "ios",
+    "Hostname": "PY_WLC",
+    "Inventory_Timestamp": "20250818_102616",
+    "OS_Version": "17.12.05",
+    "SFP_Details": "NAME: \"Chassis\", DESCR: \"C9800-CL Chassis\"\nPID: C9800-CL-K9       , VID: V00  , SN: 9TI0OXV4I3B\n\nNAME: \"module R0\", DESCR: \"Cisco C9800-CL Route Processor\"\nPID: C9800-CL-K9       , VID: V00  , SN: JAB1303001C\n\nNAME: \"module F0\", DESCR: \"Cisco C9800-CL Embedded Services Processor\"\nPID: C9800-CL-K9       , VID:      , SN:",
+    "Serial_Number": "9TI0OXV4I3B",
+    "Switch_Model": "C9800-CL",
+    "Type_of_cabling": "",
+    "Vendor": "Cisco",
+    "ip_address": "172.31.1.200",
+    "mac_address": [
+        "000c.2916.bb02"
+    ]
+}

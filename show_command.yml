@@ -1,0 +1,26 @@
+---
+- name: Show commands and configure Cisco switches
+  hosts: all_devices
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+    - name: Run multiple show commands
+      cisco.ios.ios_command:
+        commands:
+            - show version
+            - show ip interface brief
+            - show running-config
+      register: output
+
+    - name: Print 'show version' output
+      debug:
+        msg: "{{ output.stdout_lines[0] }}"
+
+    - name: Print 'show ip interface brief' output
+      debug:
+        msg: "{{ output.stdout_lines[1] }}"
+
+    - name: Print 'show running-config' output
+      debug:
+        msg: "{{ output.stdout_lines[2] }}"

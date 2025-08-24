@@ -1,0 +1,23 @@
+---
+- name: Run show command on all devices
+  hosts: all_devices
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+
+    - name: Run show command
+      ios_command:
+        commands:
+          - show run
+      register: output
+
+    - name: Set output file path
+      set_fact:
+        output_file_path: "{{ output_dir }}/{{ inventory_hostname }}_{{ timestamp }}.log"
+
+    - name: Save output to local file
+      delegate_to: localhost
+      copy:
+        content: "{{ output.stdout[0] }}"
+        dest: "{{ output_file_path }}"

@@ -1,0 +1,24 @@
+
+PLAY [Full Configuration of LAB-SW Cisco Switch] *******************************
+
+TASK [Set hostname,user] *******************************************************
+ok: [LAB-SW]
+
+TASK [Configure VLANs] *********************************************************
+ok: [LAB-SW] => (item={'vlan_id': 700, 'vlan_name': 'auto_700'})
+ok: [LAB-SW] => (item={'vlan_id': 800, 'vlan_name': 'auto_800'})
+ok: [LAB-SW] => (item={'vlan_id': 900, 'vlan_name': 'auto_900'})
+
+TASK [Configure VLANs] *********************************************************
+ok: [LAB-SW] => (item={'vlan_id': 700, 'vlan_name': 'auto_700'})
+ok: [LAB-SW] => (item={'vlan_id': 800, 'vlan_name': 'auto_800'})
+ok: [LAB-SW] => (item={'vlan_id': 900, 'vlan_name': 'auto_900'})
+
+TASK [Configure interfaces with VLAN access and descriptions] ******************
+changed: [LAB-SW] => (item={'intf': 'GigabitEthernet1/0/9', 'desc': 'auto_700', 'vlan': 700})
+changed: [LAB-SW] => (item={'intf': 'GigabitEthernet1/0/10', 'desc': 'auto_800', 'vlan': 800})
+failed: [LAB-SW] (item={'intf': 'GigabitEthernet1/0/12', 'desc': 'auto_900', 'vlan': 900}) => {"ansible_loop_var": "item", "changed": false, "item": {"desc": "auto_900", "intf": "GigabitEthernet1/0/12", "vlan": 900}, "module_stderr": "switchport mode access\r\nCommand rejected: Gi1/0/12 is not a switching port.\r\nLAB-SW(config-if)#", "module_stdout": "", "msg": "MODULE FAILURE: No start of json char found\nSee stdout/stderr for the exact error"}
+
+PLAY RECAP *********************************************************************
+LAB-SW                     : ok=3    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+

@@ -1,0 +1,61 @@
+---
+- name: Cisco C9800 WLC Image Upgrade and Cleanup (No SCP Copy)
+  hosts: all
+  gather_facts: no
+  connection: network_cli
+  vars:
+    new_image: "C9800-CL-universalk9.17.12.05.SPA.bin"
+
+  tasks:
+
+    - name: Verify current boot system
+      ios_command:
+        commands: show boot
+      register: boot_output
+
+    - name: Debug current boot vars
+      debug:
+        var: boot_output.stdout_lines
+
+    - name: Set new boot image
+      ios_config:
+        lines:
+          - "no boot system"
+          - "boot system flash:/{{ new_image }}"
+        save_when: modified
+
+    - name: Verify boot variable set
+      ios_command:
+        commands: show boot
+      register: boot_check
+
+    - name: Debug boot variable after update
+      debug:
+        var: boot_check.stdout_lines
+
+    - name: Reload device to boot new image
+      ios_command:
+        commands: reload
+      ignore_errors: yes  # WLC will disconnect
+
+    - name: Wait for device to come back
+      wait_for:
+        host: "{{ ansible_host }}"
+        port: 22
+        delay: 120
+        timeout: 600
+
+    - name: Verify image after reload
+      ios_command:
+        commands: show version
+      register: version_output
+
+    - name: Debug new version
+      debug:
+        var: version_output.stdout_lines
+
+    - name: Remove old images (cleanup)
+      ios_config:
+        lines:
+          - "delete /force /recursive flash:/old_image_name.bin"
+      when: "'old_image_name.bin' in version_output.stdout[0]"

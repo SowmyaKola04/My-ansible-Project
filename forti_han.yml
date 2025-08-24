@@ -1,0 +1,132 @@
+---
+- name: FortiGate Hardening via REST API (Token-Based)
+  hosts: fortigates
+  connection: local
+  gather_facts: no
+  vars:
+    host: "{{ inventory_hostname }}"
+    token: "{{ fortigate_token }}"
+    vdom: "root"
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ token }}"
+
+  tasks:
+    - name: 1. Register product (Manual)
+      debug:
+        msg: "Product registration typically done via GUI/CLI manually"
+
+    - name: 2. Configure Admin Access
+      uri:
+        url: "https://{{ host }}/api/v2/cmdb/system/admin/admin?access_token={{ token }}"
+        method: PUT
+        headers: "{{ headers }}"
+        body: '{"accprofile":"super_admin","password":"StrongPass123!","vdom":["root"],"allowaccess":"https https ssh"}'
+        body_format: json
+        validate_certs: no
+
+    - name: 3. Configure System Time
+      uri:
+        url: "https://{{ host }}/api/v2/cmdb/system/global?access_token={{ token }}"
+        method: PUT
+        headers: "{{ headers }}"
+        body: '{"timezone": "04"}'
+        body_format: json
+        validate_certs: no
+
+    - name: 4. Configure Logging
+      uri:
+        url: "https://{{ host }}/api/v2/cmdb/log/syslogd/setting?access_token={{ token }}"
+        method: PUT
+        headers: "{{ headers }}"
+        body: '{"status": "enable", "server": "192.168.1.100", "port": "514", "mode": "udp"}'
+        body_format: json
+        validate_certs: no
+
+    - name: 5. Local-in Policies (GET)
+      uri:
+        url: "https://{{ host }}/api/v2/cmdb/firewall/local-in-policy?access_token={{ token }}"
+        method: GET
+        headers: "{{ headers }}"
+        validate_certs: no
+      register: local_in_policy
+
+    - name: 6. Physical Security - Manual Note
+      debug:
+        msg: "Ensure firewall physically secured — not automatable."
+
+    - name: 7. PSIRT vulnerability monitoring
+      uri:
+        url: "https://{{ host }}/api/v2/monitor/system/psirt?access_token={{ token }}"
+        method: GET
+        headers: "{{ headers }}"
+        validate_certs: no
+      register: psirt_output
+
+    - name: 8. Firmware Check
+      uri:
+        url: "https://{{ host }}/api/v2/monitor/system/firmware?access_token={{ token }}"
+        method: GET
+        headers: "{{ headers }}"
+        validate_certs: no
+
+    - name: 9. Encrypted Protocols
+      uri:
+        url: "https://{{ host }}/api/v2/cmdb/system/global?access_token={{ token }}"
+        method: PUT
+        headers: "{{ headers }}"
+        body: '{"admin-https-ssl-versions": ["tlsv1-2"]}'
+        body_format: json
+        validate_certs: no
+
+    - name: 10. Strong Ciphers
+      uri:
+        url: "https://{{ host }}/api/v2/cmdb/system/global?access_token={{ token }}"
+        method: PUT
+        headers: "{{ headers }}"
+        body: '{"ssl-static-key-ciphers": "enable"}'
+        body_format: json
+        validate_certs: no
+
+    - name: 11. FortiGuard Settings
+      uri:
+        url: "https://{{ host }}/api/v2/cmdb/system/fortiguard?access_token={{ token }}"
+        method: GET
+        headers: "{{ headers }}"
+        validate_certs: no
+
+    - name: 12. Penetration Testing - Manual Note
+      debug:
+        msg: "Pen test usually performed manually using tools — not via automation."
+
+    - name: 13. DOS Protection
+      uri:
+        url: "https://{{ host }}/api/v2/cmdb/vpn.ssl/settings?access_token={{ token }}"
+        method: PUT
+        headers: "{{ headers }}"
+        body: '{"dos-protection": "enable"}'
+        body_format: json
+        validate_certs: no
+
+    - name: 14. Secure Password Storage
+      uri:
+        url: "https://{{ host }}/api/v2/cmdb/system/global?access_token={{ token }}"
+        method: GET
+        headers: "{{ headers }}"
+        validate_certs: no
+
+    - name: 15. Backup Config
+      uri:
+        url: "https://{{ host }}/api/v2/monitor/system/config/backup?access_token={{ token }}&scope=global"
+        method: GET
+        headers: "{{ headers }}"
+        validate_certs: no
+
+    - name: 16. Non-standard Ports
+      uri:
+        url: "https://{{ host }}/api/v2/cmdb/system/global?access_token={{ token }}"
+        method: PUT
+        headers: "{{ headers }}"
+        body: '{"admin-port": "4443", "admin-sport": "2222"}'
+        body_format: json
+        validate_certs: no

@@ -1,0 +1,85 @@
+---
+- name: IOS Image Upgrade via SCP with Boot and Reload
+  hosts: all
+  gather_facts: no
+  connection: network_cli
+
+  vars:
+    scp_server: 172.16.0.161         # Your WSL IP
+    image_name: C9800-CL-universalk9.17.12.05.SPA.bin
+    image_path: "flash:{{ image_name }}"
+    scp_user: cisco                  # Must match local WSL user
+    scp_password: ciscoios          # Password set for that user
+    ansible_command_timeout: 600
+    ios_image_size: 1255395000
+
+  tasks:
+
+    - name: Enable SCP on the device
+      ios_config:
+        lines:
+          - ip scp server enable
+
+    - name: Check flash free space
+      ios_command:
+        commands:
+          - "dir flash: | inc bytes free"
+      register: flash_output
+
+    - name: Show raw flash output (for debug)
+      debug:
+        var: flash_output.stdout[0]
+
+    - name: Extract flash free bytes (handles commas)
+      set_fact:
+        flash_free_bytes: >
+          {{ flash_output.stdout[0].split('(')[1].split(' ')[0].replace(',', '') | int }}
+
+    - name: Show parsed free bytes
+      debug:
+        msg: "Free flash: {{ flash_free_bytes }} bytes; Image size: {{ ios_image_size }} bytes."
+
+    - name: Copy IOS image to flash via SCP
+      ios_command:
+        commands:
+          - "copy scp://{{ scp_user }}:{{ scp_password }}@{{ scp_server }}/{{ image_name }} flash:"
+      register: scp_result
+
+    - name: Show flash contents (dir flash:)
+      ios_command:
+        commands:
+          - "dir flash: | inc {{ image_name }}"
+      register: flash_after_copy
+
+    - name: "Debug: Flash directory output"
+      debug:
+        var: flash_after_copy.stdout_lines
+
+    - name: Set boot system to new image
+      ios_config:
+        lines:
+          - "boot system {{ image_path }}"
+        before:
+          - "no boot system"
+
+    - name: Save running config to startup config
+      ios_command:
+        commands:
+          - "write memory"
+
+    - name: Reload the device
+      ios_command:
+        commands:
+          - "reload"
+      ignore_errors: yes  # Connection drops during reload
+
+    - name: Wait for device to come back online
+      wait_for:
+        host: "{{ inventory_hostname }}"
+        port: 22
+        delay: 60
+        timeout: 600
+        state: started
+
+
+

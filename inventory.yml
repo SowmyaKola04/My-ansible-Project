@@ -1,0 +1,125 @@
+---
+- name: Create timestamped inventory_Management folder
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Set run timestamp
+      set_fact:
+        run_ts: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
+      run_once: true
+      delegate_to: localhost
+      delegate_facts: true
+
+    - name: Create base output directory
+      file:
+        path: "./inventory_Management/{{ run_ts }}"
+        state: directory
+        mode: '0755'
+
+- name: Gather management details from Cisco IOS devices
+  hosts: all
+  gather_facts: no
+  connection: network_cli
+  collections:
+    - cisco.ios
+  vars:
+    run_ts: "{{ hostvars['localhost']['run_ts'] }}"
+  tasks:
+    - name: Gather IOS facts
+      cisco.ios.ios_facts:
+      register: ios_facts_out
+
+    - name: Gather basic network facts
+      ansible.builtin.setup:
+        gather_subset: min
+
+    - name: Set IP address
+      set_fact:
+        device_ip: "{{ ansible_host | default(ansible_facts.ansible_net_all_ipv4_addresses[0] | default('N/A')) }}"
+
+    - name: Get MAC address via CLI
+      cisco.ios.ios_command:
+        commands:
+          - show interfaces | include Hardware
+      register: mac_raw
+
+    - name: Parse MAC from CLI output
+      set_fact:
+        device_mac: "{{ mac_raw.stdout[0] | regex_search('address is ([0-9a-fA-F:.]+)', '\\1') | default('N/A') }}"
+
+    - name: Gather username info
+      cisco.ios.ios_command:
+        commands:
+          - show run | include username
+      register: username_output
+
+    - name: Gather version info
+      cisco.ios.ios_command:
+        commands:
+          - show version
+      register: version_output
+
+    - name: Gather SFP / Transceiver info
+      cisco.ios.ios_command:
+        commands:
+          - show inventory
+      register: sfp_output
+
+    - name: Set Vendor
+      set_fact:
+        device_vendor: >-
+          {% if ios_facts_out is defined and ios_facts_out.ansible_facts.ansible_net_model is defined %}
+            Cisco
+          {% elif 'PY_WLC' in inventory_hostname %}
+            Aruba
+          {% else %}
+            Unknown
+          {% endif %}
+
+    - name: Set Vendor (trim any whitespace/newlines)
+      set_fact:
+        device_vendor: "{{ (ios_facts_out.ansible_facts.ansible_net_vendor | default('Cisco')) | trim }}"
+
+    - name: Gather hostname info
+      cisco.ios.ios_command:
+        commands:
+          - show run | include hostname
+      register: hostname_output
+
+    - name: Build device_info dict
+      set_fact:
+        device_info:
+          ip_address: "{{ device_ip }}"
+          mac_address: "{{ device_mac }}"
+          Admin_Username: "{{ ansible_user | default('N/A') }}"
+          Hostname: "{{ ios_facts_out.ansible_facts.ansible_net_hostname | default(inventory_hostname) }}"
+          Device_Type: "{{ ios_facts_out.ansible_facts.ansible_net_system | default('ios') }}"
+          Inventory_Timestamp: "{{ run_ts }}"
+          OS_Version: "{{ ios_facts_out.ansible_facts.ansible_net_version | default('N/A') }}"
+          Serial_Number: "{{ ios_facts_out.ansible_facts.ansible_net_serialnum | default('N/A') }}"
+          Switch_Model: "{{ ios_facts_out.ansible_facts.ansible_net_model | default('N/A') }}"
+          SFP_Details: "{{ sfp_output.stdout | default(['No SFP data']) | join('\n') }}"
+          Vendor: "{{ device_vendor }}"
+          Type_of_cabling: ""
+
+    - name: Create device folder on controller
+      delegate_to: localhost
+      file:
+        path: "./inventory_Management/{{ run_ts }}/{{ inventory_hostname }}"
+        state: directory
+
+    - name: Save management details to JSON
+      delegate_to: localhost
+      copy:
+        content: "{{ device_info | to_nice_json }}"
+        dest: "./inventory_Management/{{ run_ts }}/{{ inventory_hostname }}/management_details.json"
+
+- name: Convert JSON to Excel
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Run json_to_excel.py script
+      command: >
+        python3 /home/nipun/my_ansible_project/inventory_Management/json_to_excel.py
+        ./inventory_Management/{{ run_ts }}
+        ./inventory_Management/{{ run_ts }}/inventory_summary.xlsx

@@ -1,0 +1,16 @@
+---
+- name: Run show commands on multiple Cisco devices
+  hosts: all_devices
+  gather_facts: no
+  connection: network_cli
+  serial: 1
+  tasks:
+    - name: Run 'show inventory'
+      ios_command:
+        commands: show running-config
+      register: show_inventory
+
+    - name: Display 'show inventory' output
+      debug:
+        var: show_inventory.stdout_lines
+

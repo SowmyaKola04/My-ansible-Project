@@ -1,0 +1,11 @@
+{
+    "AAA_Accounting_Configured": false,
+    "Device": "PY_WLC",
+    "Evidence": "service timestamps log datetime msec; logging host 172.16.0.96;  transport input ssh;  transport input ssh",
+    "NTP_Configured": false,
+    "SSH_Enabled": true,
+    "Status": "Non-Compliant",
+    "Syslog_Host_Configured": true,
+    "Telnet_Disabled": true,
+    "Timestamps_on_Logging": true
+}

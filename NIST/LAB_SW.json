@@ -1,0 +1,11 @@
+{
+    "AAA_Accounting_Configured": false,
+    "Device": "LAB_SW",
+    "Evidence": "service timestamps log datetime msec;  transport input all;  transport input ssh",
+    "NTP_Configured": false,
+    "SSH_Enabled": true,
+    "Status": "Non-Compliant",
+    "Syslog_Host_Configured": false,
+    "Telnet_Disabled": true,
+    "Timestamps_on_Logging": true
+}

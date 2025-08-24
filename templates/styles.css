@@ -1,0 +1,80 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f8f9fa;
+  color: #212529;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 2rem;
+}
+
+h1 {
+  font-size: 2rem;
+  color: #007bff;
+  margin-bottom: 1rem;
+}
+
+.section h2 {
+  color: #17a2b8;
+  margin-top: 2rem;
+  font-size: 1.5rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.3rem;
+}
+
+.subfolder h3 {
+  color: #fd7e14;
+  margin-top: 1rem;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.filters input {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.file-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.file-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px dashed #ccc;
+}
+
+.file-entry a {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: 500;
+}
+
+.file-entry .btn-download {
+  margin-left: 1rem;
+  background: #28a745;
+  color: white;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background 0.2s ease-in-out;
+}
+
+.file-entry .btn-download:hover {
+  background: #218838;
+}

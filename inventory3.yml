@@ -1,0 +1,97 @@
+---
+- name: Cisco 9800-CL Software Upgrade Workflow (No Backup)
+  hosts: all_devices
+  gather_facts: no
+  connection: network_cli
+
+  vars:
+    desired_version: "17.12.05"
+    image_file: "C9800-CL-universalk9.17.12.05.SPA.bin"
+
+  tasks:
+    - name: Get current software version
+      cisco.ios.ios_command:
+        commands:
+          - show version
+      register: current_version
+
+    - name: Extract current version
+      set_fact:
+        current_ver_str: "{{ current_version.stdout[0] | regex_search('Version ([0-9\\.]+)', '\\1') }}"
+
+    - name: Stop if already on desired version
+      meta: end_play
+      when: current_ver_str == desired_version
+
+    - name: Check bootflash for image
+      cisco.ios.ios_command:
+        commands:
+          - "dir bootflash:"
+      register: bootflash_contents
+
+    - name: Copy image if missing
+      ansible.netcommon.net_put:
+        src: "/home/nipun/my_ansible_project/images/{{ image_file }}"
+        dest: "bootflash:{{ image_file }}"
+      when: image_file not in bootflash_contents.stdout[0]
+      vars:
+        ansible_command_timeout: 3600
+
+    - name: Set boot variable
+      cisco.ios.ios_config:
+        lines:
+          - "boot system flash bootflash:{{ image_file }}"
+
+    - name: Save config
+      cisco.ios.ios_config:
+        save_when: always
+
+    - name: Schedule reload without prompt (async)
+      cisco.ios.ios_command:
+        commands:
+          - reload force
+      async: 1
+      poll: 0
+      ignore_errors: yes
+
+    - name: Wait for device to shut down
+      wait_for:
+        host: "{{ ansible_host }}"
+        port: 22
+        state: stopped
+        timeout: 600
+      delegate_to: localhost
+
+    - name: Wait for device to come back online
+      wait_for:
+        host: "{{ ansible_host }}"
+        port: 22
+        delay: 60
+        timeout: 900
+      delegate_to: localhost
+
+    - meta: reset_connection
+
+    - name: Get new software version
+      cisco.ios.ios_command:
+        commands:
+          - show version
+      register: new_version
+
+    - name: Extract new version
+      set_fact:
+        new_ver_str: "{{ new_version.stdout[0] | regex_search('Version ([0-9\\.]+)', '\\1') }}"
+
+    - name: Create device-specific output folder
+      local_action:
+        module: file
+        path: "/home/nipun/my_ansible_project/output/{{ inventory_hostname }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create CSV file for this device
+      local_action:
+        module: copy
+        dest: "/home/nipun/my_ansible_project/output/{{ inventory_hostname }}/upgrade_result.csv"
+        content: "Device,Old_Version,New_Version,Timestamp\n{{ inventory_hostname }},{{ current_ver_str }},{{ new_ver_str }},{{ lookup('pipe', 'date +%Y-%m-%d_%H:%M:%S') }}\n"
+        mode: '0644'

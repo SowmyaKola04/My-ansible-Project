@@ -1,0 +1,144 @@
+---
+- name: IOS Image Upgrade via SCP with Boot and Reload
+  hosts: all_devices
+  gather_facts: no
+  connection: network_cli
+
+  vars:
+    scp_server: 172.16.1.210
+    image_name: C9800-CL-universalk9.17.12.05.SPA.bin
+    image_path: "flash:{{ image_name }}"
+    scp_adduser: cisco
+    scp_passwd: ciscoios
+    ansible_command_timeout: 700
+    ios_image_size: 1255395000
+
+  tasks:
+    # ---------------- BEFORE UPGRADE ----------------
+    - name: Gather old version details
+      ios_command:
+        commands:
+          - "show version"
+      register: show_version_before
+
+    - name: Gather memory details
+      ios_command:
+        commands:
+          - "show processes memory | include Processor"
+      register: show_memory_before
+
+    - name: Gather uptime
+      ios_command:
+        commands:
+          - "show version | include uptime"
+      register: uptime_before
+
+    - name: Save before state to facts
+      set_fact:
+        old_version: "{{ show_version_before.stdout[0].splitlines()[0] }}"
+        old_memory: "{{ show_memory_before.stdout[0] }}"
+        old_uptime: "{{ uptime_before.stdout[0] }}"
+
+    # ---------------- UPGRADE ----------------
+    - name: Enable SCP on the device
+      ios_config:
+        lines:
+          - ip scp server enable
+
+    - name: Check flash free space
+      ios_command:
+        commands:
+          - "dir flash: | inc bytes free"
+      register: flash_output
+
+    - name: Extract flash free bytes (handles commas)
+      set_fact:
+        flash_free_bytes: >
+          {{ flash_output.stdout[0].split('(')[1].split(' ')[0].replace(',', '') | int }}
+
+    - name: Copy IOS image to device via SCP
+      ios_command:
+        commands:
+          - "copy scp://{{ scp_adduser }}:{{ scp_passwd }}@{{ scp_server }}/{{ image_name }} flash:"
+
+    - name: Show flash contents (dir flash:)
+      ios_command:
+        commands:
+          - "dir flash: | inc {{ image_name }}"
+      register: flash_after_copy
+
+    - name: Set boot system to new image
+      ios_config:
+        lines:
+          - "boot system {{ image_path }}"
+        before:
+          - "no boot system"
+
+    - name: Save running config to startup config
+      ios_command:
+        commands:
+          - "write memory"
+
+    - name: Reload the device
+      ios_command:
+        commands:
+          - command: "reload"
+            prompt: "Proceed with reload? [confirm]"
+            answer: "Y"
+      ignore_errors: yes
+
+    - name: Reset connection
+      meta: reset_connection
+
+    - name: Check for SSH port in retry loop
+      wait_for:
+        host: "{{ ansible_host | default(inventory_hostname) }}"
+        port: 22
+        timeout: 60      # only wait 1 min each try
+      register: wait_result
+      retries: 30        # try up to 30 mins
+      delay: 60          # pause 1 min between tries
+      until: wait_result is succeeded
+
+    # ---------------- AFTER UPGRADE ----------------
+    - name: Gather new version details
+      ios_command:
+        commands:
+          - "show version"
+      register: show_version_after
+
+    - name: Gather memory details after upgrade
+      ios_command:
+        commands:
+          - "show processes memory | include Processor"
+      register: show_memory_after
+
+    - name: Gather uptime after reload
+      ios_command:
+        commands:
+          - "show version | include uptime"
+      register: uptime_after
+
+    - name: Save after state to facts
+      set_fact:
+        new_version: "{{ show_version_after.stdout[0].splitlines()[0] }}"
+        new_memory: "{{ show_memory_after.stdout[0] }}"
+        new_uptime: "{{ uptime_after.stdout[0] }}"
+
+    # ---------------- EXPORT ----------------
+    - name: Save results to JSON
+      copy:
+        dest: "./playbook_output.json"
+        content: |
+          {
+            "device": "{{ inventory_hostname }}",
+            "old_version": "{{ old_version }}",
+            "new_version": "{{ new_version }}",
+            "old_memory": "{{ old_memory }}",
+            "new_memory": "{{ new_memory }}",
+            "old_uptime": "{{ old_uptime }}",
+            "new_uptime": "{{ new_uptime }}",
+            "flash_free_before": "{{ flash_free_bytes }}",
+            "flash_after_copy": "{{ flash_after_copy.stdout[0] }}"
+          }
+
