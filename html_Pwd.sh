@@ -2,7 +2,7 @@ export TZ=Asia/Kolkata
 
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 HTMLFILE="outputs/devices_output_${TIMESTAMP}.html"
-PASSPHRASE="IITH@2025"
+PASSPHRASE="XXXX"
 
 
 TEMPFILE=$(mktemp)
