@@ -5,8 +5,8 @@
   connection: network_cli
 
   vars:
-    scp_server: 172.16.0.161         # Your WSL IP
-    image_name: C9800-CL-universalk9.17.12.05.SPA.bin
+    scp_server: XXXX         # Your WSL IP
+    image_name: <IMAGE NAME>
     image_path: "flash:{{ image_name }}"
     scp_user: cisco                  # Must match local WSL user
     scp_password: ciscoios          # Password set for that user
