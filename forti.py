@@ -2,8 +2,8 @@ import requests
 import openpyxl
 
 # FortiGate details
-FG_IP = "172.31.1.227"
-API_TOKEN = "1p3bGj4psffx7y8mnt9z6whmbxgpz8"
+FG_IP = "<IP>"
+API_TOKEN = "<ENTER YOUR API TOKEN>"
 VDOM = "root"
 
 # Base URL
